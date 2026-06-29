@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HydroEngine: Sustainable Irrigation Sim</title>
+    <title>HydroEngine Pro: Sustainable Infrastructure</title>
     <style>
         :root {
-            --bg-color: #1a1a24;
-            --card-color: #252538;
+            --bg-color: #0f111a;
+            --card-color: #1e2235;
             --accent-blue: #3b82f6;
             --accent-green: #10b981;
             --accent-red: #ef4444;
@@ -26,85 +26,118 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 920px;
             width: 100%;
             display: grid;
-            grid-template-columns: 1fr 280px;
+            grid-template-columns: 1fr 300px;
             gap: 20px;
         }
 
         header {
             grid-column: span 2;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
-        h1 { margin: 0 0 5px 0; font-size: 24px; color: var(--accent-blue); }
+        h1 { margin: 0 0 5px 0; font-size: 26px; color: #60a5fa; letter-spacing: 0.5px; }
         p { margin: 0; color: #9ca3af; font-size: 14px; }
 
-        .game-wrapper {
-            position: relative;
-        }
-
         canvas {
-            background-color: #2d3748;
-            border-radius: 8px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            background-color: #1c2331;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
             cursor: crosshair;
             display: block;
         }
 
         .sidebar {
             background-color: var(--card-color);
-            padding: 20px;
-            border-radius: 8px;
+            padding: 22px;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid #2e344e;
         }
 
         .stats div {
-            margin-bottom: 15px;
-            font-size: 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #9ca3af;
         }
 
         .stats span {
             display: block;
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 2px;
+            font-size: 22px;
+            font-weight: 800;
+            margin-top: 4px;
+            text-transform: none;
+            letter-spacing: normal;
         }
 
-        .budget-good { color: var(--accent-green); }
-        .budget-bad { color: var(--accent-red); }
+        .budget-good { color: var(--accent-green); text-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+        .budget-bad { color: var(--accent-red); text-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+
+        .dropdown-container {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            background: #151824;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #2e344e;
+        }
+
+        .dropdown-btn {
+            width: 100%;
+            background: #24293e;
+            color: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .dropdown-btn:hover { background: #2e344e; }
+
+        .dropdown-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease-out;
+            font-size: 12px;
+            color: #a1a1aa;
+            line-height: 1.5;
+            padding: 0 12px;
+        }
+
+        .dropdown-content p { margin: 12px 0; }
 
         .btn {
             background-color: var(--accent-blue);
             color: white;
             border: none;
-            padding: 12px;
-            border-radius: 6px;
+            padding: 14px;
+            border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             font-size: 15px;
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
         }
 
-        .btn:hover { background-color: #2563eb; }
-        .btn-reset { background-color: #4b5563; }
-        .btn-reset:hover { background-color: #374151; }
-
-        .instructions {
-            font-size: 12px;
-            color: #9ca3af;
-            line-height: 1.4;
-            margin-top: 15px;
-            border-top: 1px solid #374151;
-            padding-top: 15px;
-        }
+        .btn:hover { background-color: #2563eb; transform: translateY(-1px); }
+        .btn:active { transform: translateY(1px); }
+        .btn-reset { background-color: #374151; box-shadow: none; }
+        .btn-reset:hover { background-color: #4b5563; }
 
         #modal {
             position: fixed;
@@ -112,24 +145,26 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: var(--card-color);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            padding: 35px;
+            border-radius: 14px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             text-align: center;
             display: none;
             z-index: 10;
-            border: 2px solid var(--accent-blue);
+            border: 1px solid #3b82f6;
+            width: 340px;
         }
         
-        #modal h2 { margin-top: 0; }
+        #modal h2 { margin-top: 0; font-size: 22px; }
+        #modal p { color: #d1d5db; font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>HydroEngine: Level 1 - Central Valley</h1>
-        <p>SDG 6 Target: Route clean water safely. Avoid pesticides. Keep excavation costs minimal.</p>
+        <h1 id="levelTitle">HydroEngine Pro: Level 1</h1>
+        <p id="levelDesc">Loading regional parameters...</p>
     </header>
 
     <div class="game-wrapper">
@@ -138,15 +173,20 @@
 
     <div class="sidebar">
         <div class="stats">
-            <div>Available Budget: <span id="budgetDisplay" class="budget-good">$10,000</span></div>
-            <div>Excavation Cost: <span id="costDisplay">$0</span></div>
-            <div>Water Delivered: <span id="waterDisplay" style="color: #60a5fa;">0%</span></div>
+            <div>Available Budget <span id="budgetDisplay" class="budget-good">$0</span></div>
+            <div>Excavation Cost <span id="costDisplay" style="color: #e5e7eb;">$0</span></div>
+            <div>Water Arrived <span id="waterDisplay" style="color: #60a5fa;">0%</span></div>
             
-            <div class="instructions">
-                <strong>How to Play:</strong><br>
-                1. <strong>Click & Drag</strong> on the map to carve an irrigation trench from the Reservoir (Blue) to the Crops (Green).<br><br>
-                2. Avoid the <strong>Pesticide Zone (Red)</strong>—routing through it contaminates the stream.<br><br>
-                3. Shorter trenches save money. Click <strong>Test Flow</strong> to run your simulation!
+            <div class="dropdown-container">
+                <button class="dropdown-btn" id="toggleDropdown">
+                    How to Play Guide <span id="arrow">▼</span>
+                </button>
+                <div class="dropdown-content" id="dropdownMenu">
+                    <p>1. <strong>Click & Drag</strong> your mouse on the tactical map screen to carve out open irrigation trenches.</p>
+                    <p>2. Connect the <strong>Blue Reservoir</strong> directly to the <strong>Green Crop Fields</strong>.</p>
+                    <p>3. <strong>Environmental Safeguard:</strong> Ensure your lines avoid entering the Red Hazard grids entirely.</p>
+                    <p>4. <strong>Efficiency:</strong> Shorter paths keep building costs down. Complete your layout within the budget limit!</p>
+                </div>
             </div>
         </div>
 
@@ -158,16 +198,17 @@
 </div>
 
 <div id="modal">
-    <h2 id="modalTitle">Simulation Result</h2>
+    <h2 id="modalTitle">Simulation Complete</h2>
     <p id="modalBody"></p>
-    <button class="btn" style="margin-top: 15px; width: auto; padding: 10px 20px;" onclick="closeModal()">Try Again</button>
+    <button class="btn" id="modalActionBtn" style="width: auto; padding: 12px 30px; margin-bottom: 0;">Next Step</button>
 </div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // UI elements
+    const levelTitle = document.getElementById('levelTitle');
+    const levelDesc = document.getElementById('levelDesc');
     const budgetDisplay = document.getElementById('budgetDisplay');
     const costDisplay = document.getElementById('costDisplay');
     const waterDisplay = document.getElementById('waterDisplay');
@@ -176,26 +217,46 @@
     const modal = document.getElementById('modal');
     const modalTitle = document.getElementById('modalTitle');
     const modalBody = document.getElementById('modalBody');
+    const modalActionBtn = document.getElementById('modalActionBtn');
+    const toggleDropdown = document.getElementById('toggleDropdown');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    const arrow = document.getElementById('arrow');
 
-    // Game Constants & Configuration
-    const START_BUDGET = 10000;
-    const COST_PER_PIXEL = 25; 
-    
-    // Level Design Layout
-    const reservoir = { x: 60, y: 80, radius: 25 };
-    const farm = { x: 520, y: 370, radius: 30 };
-    const pollutant = { x: 220, y: 150, width: 160, height: 140 };
+    // Multi-Level Configuration Array (State Engine Fix)
+    const LEVELS = [
+        {
+            title: "HydroEngine Pro: Level 1 - Central Valley (USA)",
+            desc: "SDG 6: Route clean water safely. Avoid toxic industrial pesticide soil grids.",
+            budget: 15000,
+            costPerPixel: 25,
+            reservoir: { x: 70, y: 80, radius: 26 },
+            farm: { x: 520, y: 370, radius: 32 },
+            pollutant: { x: 230, y: 160, width: 130, height: 110 },
+            hazardLabel: "⚠️ PESTICIDE HAZARD ZONE",
+            isMountain: false
+        },
+        {
+            title: "HydroEngine Pro: Level 2 - Andean Foothills (Peru)",
+            desc: "SDG 15: Steeper high altitudes. Secure lines around unsafe erosion ridge terrain contours.",
+            budget: 19000,
+            costPerPixel: 30,
+            reservoir: { x: 70, y: 370, radius: 26 }, 
+            farm: { x: 520, y: 80, radius: 32 },      
+            pollutant: { x: 220, y: 80, width: 140, height: 260 }, 
+            hazardLabel: "⛰️ CRITICAL EROSION RIDGE",
+            isMountain: true
+        }
+    ];
 
-    // Game States
-    let userPath = []; // Stores sequences of arrays representing lines drawn
+    let currentLevelIndex = 0;
+    let userPath = []; 
     let isDrawing = false;
     let isSimulating = false;
-    let waterProgress = 0; // Animation track for simulation water flow
+    let waterProgress = 0; 
     let currentCost = 0;
     let pathPolluted = false;
-    let pathSuccessful = false;
 
-    // --- Interaction Event Listeners ---
+    // --- Interaction Input Mapping ---
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stopDrawing);
@@ -203,14 +264,35 @@
     clearBtn.addEventListener('click', resetLevel);
     testBtn.addEventListener('click', startSimulation);
 
-    // Initial setup
-    resetLevel();
+    toggleDropdown.addEventListener('click', () => {
+        if (dropdownMenu.style.maxHeight && dropdownMenu.style.maxHeight !== "0px") {
+            dropdownMenu.style.maxHeight = "0px";
+            dropdownMenu.style.paddingBottom = "0px";
+            arrow.innerText = "▼";
+        } else {
+            dropdownMenu.style.maxHeight = "320px";
+            dropdownMenu.style.paddingBottom = "12px";
+            arrow.innerText = "▲";
+        }
+    });
+
+    // Boot level
+    loadLevel(0);
+
+    function loadLevel(index) {
+        currentLevelIndex = index;
+        const config = LEVELS[currentLevelIndex];
+        
+        levelTitle.innerText = config.title;
+        levelDesc.innerText = config.desc;
+        
+        resetLevel();
+    }
 
     function startDrawing(e) {
         if (isSimulating) return;
         isDrawing = true;
         const rect = canvas.getBoundingClientRect();
-        // Start a brand new stroke segment
         userPath.push([{ x: e.clientX - rect.left, y: e.clientY - rect.top }]);
     }
 
@@ -226,45 +308,33 @@
         render();
     }
 
-    function stopDrawing() {
-        isDrawing = false;
-    }
+    function stopDrawing() { isDrawing = false; }
 
-    // --- Game Logic Metrics Engine ---
     function calculateMetrics() {
+        const config = LEVELS[currentLevelIndex];
         let totalDistance = 0;
         pathPolluted = false;
-        pathSuccessful = false;
 
         userPath.forEach(stroke => {
             for (let i = 1; i < stroke.length; i++) {
                 const p1 = stroke[i - 1];
                 const p2 = stroke[i];
-                // Calculate distance component
                 totalDistance += Math.hypot(p2.x - p1.x, p2.y - p1.y);
 
-                // Real-time environmental hazard validation
-                if (lineIntersectsRect(p1, p2, pollutant)) {
+                if (lineIntersectsRect(p1, p2, config.pollutant)) {
                     pathPolluted = true;
                 }
             }
         });
 
-        currentCost = Math.round(totalDistance * COST_PER_PIXEL);
-        
-        // Update Side Panel HUD elements
+        currentCost = Math.round(totalDistance * config.costPerPixel);
         costDisplay.innerText = `$${currentCost.toLocaleString()}`;
-        const remainingBudget = START_BUDGET - currentCost;
-        budgetDisplay.innerText = `$${remainingBudget.toLocaleString()}`;
         
-        if (remainingBudget < 0) {
-            budgetDisplay.className = 'budget-bad';
-        } else {
-            budgetDisplay.className = 'budget-good';
-        }
+        const remainingBudget = config.budget - currentCost;
+        budgetDisplay.innerText = `$${remainingBudget.toLocaleString()}`;
+        budgetDisplay.className = remainingBudget < 0 ? 'budget-bad' : 'budget-good';
     }
 
-    // Mathematical boundary box vector testing 
     function lineIntersectsRect(p1, p2, rect) {
         const minX = Math.min(p1.x, p2.x);
         const maxX = Math.max(p1.x, p2.x);
@@ -280,12 +350,12 @@
     function startSimulation() {
         if (userPath.length === 0 || isSimulating) return;
         
-        // Check connectivity baseline conditions
-        const connectedToSource = checkProximityToTarget(reservoir, 35);
-        const connectedToFarm = checkProximityToTarget(farm, 35);
+        const config = LEVELS[currentLevelIndex];
+        const connectedToSource = checkProximityToTarget(config.reservoir, 45);
+        const connectedToFarm = checkProximityToTarget(config.farm, 45);
 
         if (!connectedToSource || !connectedToFarm) {
-            showModal("Simulation Error", "Your channel path structure must explicitly connect both the water reservoir and the farm land crop infrastructure.");
+            showErrorModal();
             return;
         }
 
@@ -293,6 +363,15 @@
         waterProgress = 0;
         testBtn.disabled = true;
         animateFlow();
+    }
+
+    function showErrorModal() {
+        modalTitle.innerText = "Connection Incomplete";
+        modalTitle.style.color = "var(--accent-blue)";
+        modalBody.innerText = "Your trench structure must begin at the perimeter of the Blue Reservoir and terminate inside the Green Crops target circle.";
+        modalActionBtn.innerText = "Realign Path";
+        modalActionBtn.onclick = () => { modal.style.display = 'none'; };
+        modal.style.display = 'block';
     }
 
     function checkProximityToTarget(target, threshold) {
@@ -307,10 +386,9 @@
         return closeEnough;
     }
 
-    // Simulation loop rendering linear animation properties
     function animateFlow() {
         if (waterProgress < 100) {
-            waterProgress += 1.5;
+            waterProgress += 2.5;
             waterDisplay.innerText = `${Math.round(waterProgress)}%`;
             render();
             requestAnimationFrame(animateFlow);
@@ -322,35 +400,58 @@
     function evaluateSimulationOutcome() {
         isSimulating = false;
         testBtn.disabled = false;
-        const remainingBudget = START_BUDGET - currentCost;
+        const config = LEVELS[currentLevelIndex];
+        const remainingBudget = config.budget - currentCost;
 
         if (pathPolluted) {
-            modalTitle.innerText = "Failure: Contaminated Ecosystem";
+            modalTitle.innerText = "Hazard Violation";
             modalTitle.style.color = "var(--accent-red)";
-            modalBody.innerText = "The water path was cut directly through industrial pesticide soils. Toxins flooded downstream, causing critical layout crop failure (Violates UN SDG 6).";
+            modalBody.innerText = currentLevelIndex === 0 
+                ? "Disaster! Your channel crossed chemical pesticide fields, contaminating downstream agricultural yield targets."
+                : "Erosion Failure! Digging along that steep cliff face caused major structural slope mudslides.";
+            modalActionBtn.innerText = "Re-Engineer Layout";
+            modalActionBtn.onclick = closeModal;
         } else if (remainingBudget < 0) {
-            modalTitle.innerText = "Failure: Bankruptcy";
+            modalTitle.innerText = "Budget Deficit";
             modalTitle.style.color = "var(--accent-red)";
-            modalBody.innerText = `Your structural route choice succeeded structurally, but excavation costs ($${currentCost.toLocaleString()}) exceeded the local municipal grant profile ($10,000 budget deficit).`;
+            modalBody.innerText = `The system works safely, but excavation expenses ($${currentCost.toLocaleString()}) outstripped local municipal funds.`;
+            modalActionBtn.innerText = "Reduce Length";
+            modalActionBtn.onclick = closeModal;
         } else {
-            modalTitle.innerText = "Success! Level Clear";
+            modalTitle.innerText = "Target Achieved!";
             modalTitle.style.color = "var(--accent-green)";
-            modalBody.innerText = `Excellent infrastructure engineering! Clean water was securely delivered safely while generating a balanced budget savings of $${remainingBudget.toLocaleString()}. (SDG 6 & 12 Met).`;
+            
+            if (currentLevelIndex < LEVELS.length - 1) {
+                modalBody.innerText = `Excellent sustainable design! Retained a total surplus of $${remainingBudget.toLocaleString()}. Ready for the next international project?`;
+                modalActionBtn.innerText = "Load Next Level";
+                // Fixed logic: properly triggers level step progression cleanly
+                modalActionBtn.onclick = () => {
+                    modal.style.display = 'none';
+                    loadLevel(currentLevelIndex + 1);
+                };
+            } else {
+                modalBody.innerText = `Incredible engineering! You have completed all active global water development missions safely under budget limits.`;
+                modalActionBtn.innerText = "Restart Game Engine";
+                modalActionBtn.onclick = () => {
+                    modal.style.display = 'none';
+                    loadLevel(0);
+                };
+            }
         }
         modal.style.display = 'block';
     }
 
     function resetLevel() {
+        const config = LEVELS[currentLevelIndex];
         userPath = [];
         isDrawing = false;
         isSimulating = false;
         waterProgress = 0;
         currentCost = 0;
         pathPolluted = false;
-        pathSuccessful = false;
         
         costDisplay.innerText = "$0";
-        budgetDisplay.innerText = `$${START_BUDGET.toLocaleString()}`;
+        budgetDisplay.innerText = `$${config.budget.toLocaleString()}`;
         budgetDisplay.className = 'budget-good';
         waterDisplay.innerText = "0%";
         modal.style.display = 'none';
@@ -362,33 +463,64 @@
         resetLevel();
     }
 
-    // --- Master Render Engine Window ---
+    // --- Vector Graphic Core Engine Update ---
     function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const config = LEVELS[currentLevelIndex];
 
-        // Ground / Background Context Elements
-        ctx.fillStyle = "#374151";
+        // 1. Organic Base Earth Texture rendering
+        ctx.fillStyle = "#242c3d";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Render Hazard Zones (Pesticide Pollution Runoff Box)
-        ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
-        ctx.strokeStyle = "var(--accent-red)";
-        ctx.lineWidth = 2;
-        ctx.fillRect(pollutant.x, pollutant.y, pollutant.width, pollutant.height);
-        ctx.strokeRect(pollutant.x, pollutant.y, pollutant.width, pollutant.height);
         
-        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-        ctx.font = "bold 11px sans-serif";
-        ctx.fillText("HIGH TOXIC PESTICIDE SOIL", pollutant.x + 10, pollutant.y + 25);
+        // Styled background coordinate navigation grid matrix
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+        ctx.lineWidth = 1;
+        for (let i = 0; i < canvas.width; i += 30) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+        }
+        for (let j = 0; j < canvas.height; j += 30) {
+            ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
+        }
 
-        // Render User Custom Carved Irrigation Paths
+        // 2. Conditional Topography Layer for Level 2 (Andean Ridge)
+        if (config.isMountain) {
+            ctx.strokeStyle = "rgba(255,255,255,0.06)";
+            ctx.lineWidth = 2;
+            for (let r = 60; r < 200; r += 35) {
+                ctx.beginPath();
+                ctx.arc(config.pollutant.x + config.pollutant.width/2, config.pollutant.y + config.pollutant.height/2, r, 0, Math.PI*2);
+                ctx.stroke();
+            }
+        }
+
+        // 3. Render High Threat Block Boundaries
+        ctx.fillStyle = "rgba(239, 68, 68, 0.15)";
+        ctx.strokeStyle = "rgba(239, 68, 68, 0.6)";
+        ctx.lineWidth = 2;
+        ctx.fillRect(config.pollutant.x, config.pollutant.y, config.pollutant.width, config.pollutant.height);
+        ctx.strokeRect(config.pollutant.x, config.pollutant.y, config.pollutant.width, config.pollutant.height);
+        
+        // Diagonal caution stripes across the hazard zone
+        ctx.strokeStyle = "rgba(239, 68, 68, 0.2)";
+        ctx.lineWidth = 3;
+        for(let k = 0; k < config.pollutant.width + config.pollutant.height; k+=20) {
+            ctx.beginPath();
+            ctx.moveTo(config.pollutant.x + k, config.pollutant.y);
+            ctx.lineTo(config.pollutant.x + k - config.pollutant.height, config.pollutant.y + config.pollutant.height);
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = "#f87171";
+        ctx.font = "bold 10px monospace";
+        ctx.shadowBlur = 0;
+        ctx.fillText(config.hazardLabel, config.pollutant.x + 12, config.pollutant.y + 25);
+
+        // 4. Draw Excavated Channels Base (Soil depth contrast)
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-
-        // Step 1: Base Dirt Excavation Layer
         userPath.forEach(stroke => {
             ctx.beginPath();
-            ctx.strokeStyle = "#1e293b"; 
+            ctx.strokeStyle = "#111622"; 
             ctx.lineWidth = 14;
             stroke.forEach((pt, idx) => {
                 if (idx === 0) ctx.moveTo(pt.x, pt.y);
@@ -397,15 +529,15 @@
             ctx.stroke();
         });
 
-        // Step 2: Dynamic Sim Water Simulation Flow Layer over path
+        // 5. Flowing Simulation Liquid Overlay with Shaders
         if (isSimulating || waterProgress > 0) {
             userPath.forEach(stroke => {
                 ctx.beginPath();
-                // If path intersects pollutants, water transitions to toxic brown/green
-                ctx.strokeStyle = pathPolluted ? "#854d0e" : "#60a5fa";
+                ctx.strokeStyle = pathPolluted ? "#a16207" : "#3b82f6";
                 ctx.lineWidth = 8;
+                ctx.shadowColor = pathPolluted ? "#a16207" : "#60a5fa";
+                ctx.shadowBlur = 8;
                 
-                // Calculate percentage-based vector rendering
                 const pointsToRender = Math.ceil((waterProgress / 100) * stroke.length);
                 stroke.forEach((pt, idx) => {
                     if (idx < pointsToRender) {
@@ -416,29 +548,40 @@
                 ctx.stroke();
             });
         }
+        ctx.shadowBlur = 0; // Clear shader context safely
 
-        // Render Reservoir Structure Anchor
+        // 6. Anchor Terminal Nodes 
+        // Source Node
         ctx.beginPath();
-        ctx.arc(reservoir.x, reservoir.y, reservoir.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "#2563eb";
+        ctx.arc(config.reservoir.x, config.reservoir.y, config.reservoir.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "#1d4ed8";
         ctx.fill();
         ctx.lineWidth = 3;
-        ctx.strokeStyle = "#93c5fd";
+        ctx.strokeStyle = "#60a5fa";
+        ctx.shadowColor = "#3b82f6";
+        ctx.shadowBlur = 12;
         ctx.stroke();
+        
+        ctx.shadowBlur = 0;
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 10px sans-serif";
-        ctx.fillText("RESERVOIR", reservoir.x - 28, reservoir.y + 4);
+        ctx.font = "900 10px sans-serif";
+        ctx.fillText("SOURCE", config.reservoir.x - 21, config.reservoir.y + 4);
 
-        // Render Downstream Destination Farm Infrastructure Anchor
+        // Destination Node
         ctx.beginPath();
-        ctx.arc(farm.x, farm.y, farm.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "var(--accent-green)";
+        ctx.arc(config.farm.x, config.farm.y, config.farm.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "#047857";
         ctx.fill();
         ctx.lineWidth = 3;
-        ctx.strokeStyle = "#a7f3d0";
+        ctx.strokeStyle = "#34d399";
+        ctx.shadowColor = "#10b981";
+        ctx.shadowBlur = 12;
         ctx.stroke();
+        
+        ctx.shadowBlur = 0;
         ctx.fillStyle = "#ffffff";
-        ctx.fillText("CROPS", farm.x - 18, farm.y + 4);
+        ctx.font = "900 10px sans-serif";
+        ctx.fillText("CROPS", config.farm.x - 18, config.farm.y + 4);
     }
 </script>
 
