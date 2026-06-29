@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HydroEngine: Sustainable Irrigation Sim</title>
+    <style>
+        :root {
+            --bg-color: #1a1a24;
+            --card-color: #252538;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-color: #f3f4f6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+        }
+
+        header {
+            grid-column: span 2;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 { margin: 0 0 5px 0; font-size: 24px; color: var(--accent-blue); }
+        p { margin: 0; color: #9ca3af; font-size: 14px; }
+
+        .game-wrapper {
+            position: relative;
+        }
+
+        canvas {
+            background-color: #2d3748;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            cursor: crosshair;
+            display: block;
+        }
+
+        .sidebar {
+            background-color: var(--card-color);
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats div {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .stats span {
+            display: block;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .budget-good { color: var(--accent-green); }
+        .budget-bad { color: var(--accent-red); }
+
+        .btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 15px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover { background-color: #2563eb; }
+        .btn-reset { background-color: #4b5563; }
+        .btn-reset:hover { background-color: #374151; }
+
+        .instructions {
+            font-size: 12px;
+            color: #9ca3af;
+            line-height: 1.4;
+            margin-top: 15px;
+            border-top: 1px solid #374151;
+            padding-top: 15px;
+        }
+
+        #modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            display: none;
+            z-index: 10;
+            border: 2px solid var(--accent-blue);
+        }
+        
+        #modal h2 { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>HydroEngine: Level 1 - Central Valley</h1>
+        <p>SDG 6 Target: Route clean water safely. Avoid pesticides. Keep excavation costs minimal.</p>
+    </header>
+
+    <div class="game-wrapper">
+        <canvas id="gameCanvas" width="600" height="450"></canvas>
+    </div>
+
+    <div class="sidebar">
+        <div class="stats">
+            <div>Available Budget: <span id="budgetDisplay" class="budget-good">$10,000</span></div>
+            <div>Excavation Cost: <span id="costDisplay">$0</span></div>
+            <div>Water Delivered: <span id="waterDisplay" style="color: #60a5fa;">0%</span></div>
+            
+            <div class="instructions">
+                <strong>How to Play:</strong><br>
+                1. <strong>Click & Drag</strong> on the map to carve an irrigation trench from the Reservoir (Blue) to the Crops (Green).<br><br>
+                2. Avoid the <strong>Pesticide Zone (Red)</strong>—routing through it contaminates the stream.<br><br>
+                3. Shorter trenches save money. Click <strong>Test Flow</strong> to run your simulation!
+            </div>
+        </div>
+
+        <div>
+            <button class="btn" id="testBtn">Test Flow</button>
+            <button class="btn btn-reset" id="clearBtn">Clear Trenches</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal">
+    <h2 id="modalTitle">Simulation Result</h2>
+    <p id="modalBody"></p>
+    <button class="btn" style="margin-top: 15px; width: auto; padding: 10px 20px;" onclick="closeModal()">Try Again</button>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // UI elements
+    const budgetDisplay = document.getElementById('budgetDisplay');
+    const costDisplay = document.getElementById('costDisplay');
+    const waterDisplay = document.getElementById('waterDisplay');
+    const testBtn = document.getElementById('testBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+
+    // Game Constants & Configuration
+    const START_BUDGET = 10000;
+    const COST_PER_PIXEL = 25; 
+    
+    // Level Design Layout
+    const reservoir = { x: 60, y: 80, radius: 25 };
+    const farm = { x: 520, y: 370, radius: 30 };
+    const pollutant = { x: 220, y: 150, width: 160, height: 140 };
+
+    // Game States
+    let userPath = []; // Stores sequences of arrays representing lines drawn
+    let isDrawing = false;
+    let isSimulating = false;
+    let waterProgress = 0; // Animation track for simulation water flow
+    let currentCost = 0;
+    let pathPolluted = false;
+    let pathSuccessful = false;
+
+    // --- Interaction Event Listeners ---
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    clearBtn.addEventListener('click', resetLevel);
+    testBtn.addEventListener('click', startSimulation);
+
+    // Initial setup
+    resetLevel();
+
+    function startDrawing(e) {
+        if (isSimulating) return;
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        // Start a brand new stroke segment
+        userPath.push([{ x: e.clientX - rect.left, y: e.clientY - rect.top }]);
+    }
+
+    function draw(e) {
+        if (!isDrawing || isSimulating) return;
+        const rect = canvas.getBoundingClientRect();
+        const currentStroke = userPath[userPath.length - 1];
+        
+        const newPoint = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        currentStroke.push(newPoint);
+        
+        calculateMetrics();
+        render();
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+    }
+
+    // --- Game Logic Metrics Engine ---
+    function calculateMetrics() {
+        let totalDistance = 0;
+        pathPolluted = false;
+        pathSuccessful = false;
+
+        userPath.forEach(stroke => {
+            for (let i = 1; i < stroke.length; i++) {
+                const p1 = stroke[i - 1];
+                const p2 = stroke[i];
+                // Calculate distance component
+                totalDistance += Math.hypot(p2.x - p1.x, p2.y - p1.y);
+
+                // Real-time environmental hazard validation
+                if (lineIntersectsRect(p1, p2, pollutant)) {
+                    pathPolluted = true;
+                }
+            }
+        });
+
+        currentCost = Math.round(totalDistance * COST_PER_PIXEL);
+        
+        // Update Side Panel HUD elements
+        costDisplay.innerText = `$${currentCost.toLocaleString()}`;
+        const remainingBudget = START_BUDGET - currentCost;
+        budgetDisplay.innerText = `$${remainingBudget.toLocaleString()}`;
+        
+        if (remainingBudget < 0) {
+            budgetDisplay.className = 'budget-bad';
+        } else {
+            budgetDisplay.className = 'budget-good';
+        }
+    }
+
+    // Mathematical boundary box vector testing 
+    function lineIntersectsRect(p1, p2, rect) {
+        const minX = Math.min(p1.x, p2.x);
+        const maxX = Math.max(p1.x, p2.x);
+        const minY = Math.min(p1.y, p2.y);
+        const maxY = Math.max(p1.y, p2.y);
+
+        if (maxX < rect.x || minX > rect.x + rect.width || maxY < rect.y || minY > rect.y + rect.height) {
+            return false;
+        }
+        return true; 
+    }
+
+    function startSimulation() {
+        if (userPath.length === 0 || isSimulating) return;
+        
+        // Check connectivity baseline conditions
+        const connectedToSource = checkProximityToTarget(reservoir, 35);
+        const connectedToFarm = checkProximityToTarget(farm, 35);
+
+        if (!connectedToSource || !connectedToFarm) {
+            showModal("Simulation Error", "Your channel path structure must explicitly connect both the water reservoir and the farm land crop infrastructure.");
+            return;
+        }
+
+        isSimulating = true;
+        waterProgress = 0;
+        testBtn.disabled = true;
+        animateFlow();
+    }
+
+    function checkProximityToTarget(target, threshold) {
+        let closeEnough = false;
+        userPath.forEach(stroke => {
+            stroke.forEach(pt => {
+                if (Math.hypot(pt.x - target.x, pt.y - target.y) <= threshold) {
+                    closeEnough = true;
+                }
+            });
+        });
+        return closeEnough;
+    }
+
+    // Simulation loop rendering linear animation properties
+    function animateFlow() {
+        if (waterProgress < 100) {
+            waterProgress += 1.5;
+            waterDisplay.innerText = `${Math.round(waterProgress)}%`;
+            render();
+            requestAnimationFrame(animateFlow);
+        } else {
+            evaluateSimulationOutcome();
+        }
+    }
+
+    function evaluateSimulationOutcome() {
+        isSimulating = false;
+        testBtn.disabled = false;
+        const remainingBudget = START_BUDGET - currentCost;
+
+        if (pathPolluted) {
+            modalTitle.innerText = "Failure: Contaminated Ecosystem";
+            modalTitle.style.color = "var(--accent-red)";
+            modalBody.innerText = "The water path was cut directly through industrial pesticide soils. Toxins flooded downstream, causing critical layout crop failure (Violates UN SDG 6).";
+        } else if (remainingBudget < 0) {
+            modalTitle.innerText = "Failure: Bankruptcy";
+            modalTitle.style.color = "var(--accent-red)";
+            modalBody.innerText = `Your structural route choice succeeded structurally, but excavation costs ($${currentCost.toLocaleString()}) exceeded the local municipal grant profile ($10,000 budget deficit).`;
+        } else {
+            modalTitle.innerText = "Success! Level Clear";
+            modalTitle.style.color = "var(--accent-green)";
+            modalBody.innerText = `Excellent infrastructure engineering! Clean water was securely delivered safely while generating a balanced budget savings of $${remainingBudget.toLocaleString()}. (SDG 6 & 12 Met).`;
+        }
+        modal.style.display = 'block';
+    }
+
+    function resetLevel() {
+        userPath = [];
+        isDrawing = false;
+        isSimulating = false;
+        waterProgress = 0;
+        currentCost = 0;
+        pathPolluted = false;
+        pathSuccessful = false;
+        
+        costDisplay.innerText = "$0";
+        budgetDisplay.innerText = `$${START_BUDGET.toLocaleString()}`;
+        budgetDisplay.className = 'budget-good';
+        waterDisplay.innerText = "0%";
+        modal.style.display = 'none';
+        render();
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        resetLevel();
+    }
+
+    // --- Master Render Engine Window ---
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Ground / Background Context Elements
+        ctx.fillStyle = "#374151";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Render Hazard Zones (Pesticide Pollution Runoff Box)
+        ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
+        ctx.strokeStyle = "var(--accent-red)";
+        ctx.lineWidth = 2;
+        ctx.fillRect(pollutant.x, pollutant.y, pollutant.width, pollutant.height);
+        ctx.strokeRect(pollutant.x, pollutant.y, pollutant.width, pollutant.height);
+        
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText("HIGH TOXIC PESTICIDE SOIL", pollutant.x + 10, pollutant.y + 25);
+
+        // Render User Custom Carved Irrigation Paths
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        // Step 1: Base Dirt Excavation Layer
+        userPath.forEach(stroke => {
+            ctx.beginPath();
+            ctx.strokeStyle = "#1e293b"; 
+            ctx.lineWidth = 14;
+            stroke.forEach((pt, idx) => {
+                if (idx === 0) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.stroke();
+        });
+
+        // Step 2: Dynamic Sim Water Simulation Flow Layer over path
+        if (isSimulating || waterProgress > 0) {
+            userPath.forEach(stroke => {
+                ctx.beginPath();
+                // If path intersects pollutants, water transitions to toxic brown/green
+                ctx.strokeStyle = pathPolluted ? "#854d0e" : "#60a5fa";
+                ctx.lineWidth = 8;
+                
+                // Calculate percentage-based vector rendering
+                const pointsToRender = Math.ceil((waterProgress / 100) * stroke.length);
+                stroke.forEach((pt, idx) => {
+                    if (idx < pointsToRender) {
+                        if (idx === 0) ctx.moveTo(pt.x, pt.y);
+                        else ctx.lineTo(pt.x, pt.y);
+                    }
+                });
+                ctx.stroke();
+            });
+        }
+
+        // Render Reservoir Structure Anchor
+        ctx.beginPath();
+        ctx.arc(reservoir.x, reservoir.y, reservoir.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "#2563eb";
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#93c5fd";
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 10px sans-serif";
+        ctx.fillText("RESERVOIR", reservoir.x - 28, reservoir.y + 4);
+
+        // Render Downstream Destination Farm Infrastructure Anchor
+        ctx.beginPath();
+        ctx.arc(farm.x, farm.y, farm.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "var(--accent-green)";
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#a7f3d0";
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("CROPS", farm.x - 18, farm.y + 4);
+    }
+</script>
+
+</body>
+</html>
